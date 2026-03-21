@@ -1,0 +1,49 @@
+<style>
+    body {
+        width: 220px;
+        font-family: sans-serif;
+        padding: 15px;
+        background: #1e1e1e;
+        color: white;
+    }
+
+    .card {
+        border: 1px solid #333;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    button {
+        width: 100%;
+        padding: 10px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+
+    .on {
+        background: #00e676;
+        color: black;
+    }
+
+    .off {
+        background: #ff5252;
+        color: white;
+    }
+
+    .log {
+        font-size: 10px;
+        color: #888;
+        margin-top: 10px;
+        border-top: 1px solid #333;
+        padding-top: 5px;
+    }
+</style>
+
+<div class="card">
+    <h3>Sentinel Pro v3</h3>
+    <button id="mainToggle">OFF</button>
+    <div class="log" id="logBox">Waiting for activation...</div>
+</div>
+<script src="popup.js"></script>
