@@ -1,4 +1,4 @@
-# ⚡ ColabGO: Ghost Operator (v4.1)
+# ⚡ ColabGO: Ghost Operator (v4.2)
 <p align="center">
   <img src="Screenshots/PopupDark.png" width="350" alt="ColabGO Popup Dark">
   <img src="Screenshots/PopupLight.png" width="350" alt="ColabGO Popup Light">
@@ -10,9 +10,10 @@
 </p>
 ColabGO is a lightweight Chrome Extension designed to keep your Google Colab sessions alive and provide deep insights into your workflow. It prevents idle timeouts by using randomized, human-like interactions and provides a real-time resource dashboard.
 
-## 🚀 What's New in v4.0 & v4.1
+## 🚀 What's New in v4.1 & v4.2
 The latest version introduces several powerful features to enhance workflow continuity:
 * **Cell Execution Tracking**: A new "Cell Timer" section tracks individual cell start times, durations, and completion status.
+* **Deep Error Detection**: The extension context is continuously monitored to detect and handle "Extension context invalidated" errors, ensuring the ghost script shuts down gracefully during updates to prevent orphaned intervals.
 * **Session Analytics**: Displays real-time session uptime and cumulative execution time.
 * **Automated PC Keep-Awake**: Automatically prevents your computer from entering "Sleep" mode while the extension is active using the Chrome Power API.
 * **Desktop Notifications**: Receive native system alerts immediately when a long-running cell finishes executing.
