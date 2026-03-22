@@ -3,10 +3,20 @@ let keepAliveTimeoutId = null;
 let scanTimeoutId = null;
 
 let isExtensionActive = false;
+let antiIdleMode = 'balanced';
 
-// Initialize active state
-chrome.storage.local.get(['isActive'], (data) => {
+// Initialize active state and preferences
+chrome.storage.local.get(['isActive', 'antiIdleMode'], (data) => {
     isExtensionActive = !!data.isActive;
+    if (data.antiIdleMode) antiIdleMode = data.antiIdleMode;
+});
+
+// Update preferences dynamically when Settings UI changes
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local' && changes.antiIdleMode) {
+        antiIdleMode = changes.antiIdleMode.newValue;
+        console.log("⚡ ColabGO: [Settings] Keep-Alive mode dynamically updated to:", antiIdleMode);
+    }
 });
 
 // ===== CELL EXECUTION TIME TRACKING =====
@@ -277,24 +287,33 @@ async function ghostAction() {
         });
 
         const roll = Math.random();
-        if (roll < 0.2) {
-            // Unlikely: Tap connect button
-            const connectBtn = document.querySelector("colab-connect-button")?.shadowRoot?.querySelector("#connect");
-            if (connectBtn) {
-                console.log("⚡ ColabGO: [ghostAction] Random standard interaction -> Tapping Connect button.");
-                connectBtn.click();
-            }
-        } else if (roll < 0.7) {
-            // Most likely: Subtle scroll
-            console.log("⚡ ColabGO: [ghostAction] Random standard interaction -> Scrolling page slightly.");
+
+        if (antiIdleMode === 'safe') {
+            // Keep-Alive Mode: Safe ghost operations only (invisible scrolls)
+            console.log("⚡ ColabGO: [ghostAction] SAFE MODE active. Performing invisible ghost scroll only.");
             window.scrollBy(0, 10);
             setTimeout(() => window.scrollBy(0, -10), 500);
         } else {
-            // Somewhat likely: Focus a code cell
-            const codeCell = document.querySelector("colab-cell") || document.querySelector(".cell");
-            if (codeCell) {
-                console.log("⚡ ColabGO: [ghostAction] Random standard interaction -> Focusing code cell.");
-                codeCell.focus();
+            // Keep-Alive Mode: Balanced (clicks, scrolls, focuses)
+            if (roll < 0.2) {
+                // Unlikely: Tap connect button
+                const connectBtn = document.querySelector("colab-connect-button")?.shadowRoot?.querySelector("#connect");
+                if (connectBtn) {
+                    console.log("⚡ ColabGO: [ghostAction] Random standard interaction -> Tapping Connect button.");
+                    connectBtn.click();
+                }
+            } else if (roll < 0.7) {
+                // Most likely: Subtle scroll
+                console.log("⚡ ColabGO: [ghostAction] Random standard interaction -> Scrolling page slightly.");
+                window.scrollBy(0, 10);
+                setTimeout(() => window.scrollBy(0, -10), 500);
+            } else {
+                // Somewhat likely: Focus a code cell
+                const codeCell = document.querySelector("colab-cell") || document.querySelector(".cell");
+                if (codeCell) {
+                    console.log("⚡ ColabGO: [ghostAction] Random standard interaction -> Focusing code cell.");
+                    codeCell.focus();
+                }
             }
         }
 

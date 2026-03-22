@@ -64,6 +64,21 @@
             display: flex;
             flex-direction: column;
             gap: 14px;
+            position: relative;
+        }
+
+        /* Light Theme Override */
+        [data-theme="light"] {
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --surface: #f0f2f5;
+            --surface-2: #e4e7ec;
+            --surface-3: #d0d7df;
+            --text: #1a1d24;
+            --text-muted: #4a5568;
+            --text-dim: #718096;
+            --card-border: rgba(0, 0, 0, 0.08);
+            --card-glow: rgba(0, 0, 0, 0.02);
         }
 
         /* HEADER */
@@ -484,11 +499,156 @@
             color: var(--text-muted);
             font-weight: 600;
         }
+        /* SETTINGS VIEW STYLES */
+        .settings-content {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        .setting-item {
+            background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .setting-col {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+        }
+
+        .setting-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            line-height: 1.4;
+        }
+
+        .setting-select {
+            width: 100%;
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius-xs);
+            padding: 10px;
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            cursor: pointer;
+            transition: border 0.2s;
+        }
+
+        .setting-select:focus {
+            border-color: var(--green);
+        }
+
+        /* SWITCH TOGGLE */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 38px;
+            height: 20px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--surface-3);
+            transition: .3s;
+            border-radius: 34px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--text-muted);
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--green-soft);
+            border-color: var(--green);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(18px);
+            background-color: var(--green);
+        }
+
+        /* ICON BUTTONS */
+        .icon-btn {
+            position: absolute;
+            top: 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-muted);
+            border-radius: var(--radius-xs);
+            padding: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--text);
+        }
+        
+        .gear-btn { right: 16px; z-index: 10; }
+        .back-btn { left: 16px; z-index: 10; }
+
+        /* OLED Theme Override */
+        [data-theme="oled"] {
+            --bg: #000000;
+            --card: #000000;
+            --surface: #0a0a0c;
+            --surface-2: #111114;
+            --surface-3: #1a1a1e;
+            --card-border: rgba(255,255,255,0.08);
+        }
     </style>
 </head>
 
 <body>
-    <div class="container">
+
+    <!-- MAIN VIEW -->
+    <div class="container" id="mainView">
+        <button class="icon-btn gear-btn" id="openSettingsBtn" title="Settings">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+
         <div>
             <div class="header">
                 <img src="icons/icons8-infinity-48.png" alt="ColabGO" id="logoIcon">
@@ -496,8 +656,6 @@
             </div>
             <div class="subtitle">Ghost Operator</div>
         </div>
-
-
 
         <!-- RESOURCES -->
         <div class="resource-section">
@@ -605,6 +763,70 @@
 
         <div class="footer">
             Developed by <span>GamikaKJ</span> · v4.0
+        </div>
+    </div>
+
+
+    <!-- SETTINGS VIEW -->
+    <div class="container" id="settingsView" style="display: none;">
+        <button class="icon-btn back-btn" id="closeSettingsBtn" title="Back">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+
+        <div>
+            <div class="header" style="margin-left: 10px;">
+                <h2>Settings</h2>
+            </div>
+            <div class="subtitle">Configuration</div>
+        </div>
+
+        <div class="settings-content">
+            
+            <!-- THEME -->
+            <div class="setting-item setting-col">
+                <div class="setting-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    Interface Theme
+                </div>
+                <select id="themeSelect" class="setting-select">
+                    <option value="dark">Dark Space (Default)</option>
+                    <option value="oled">Absolute OLED Black</option>
+                    <option value="light">Light Minimal</option>
+                </select>
+            </div>
+
+            <!-- DESKTOP NOTIFS -->
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        Desktop Notifications
+                    </div>
+                    <div class="setting-desc">Alerts when cells finish</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="notifToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <!-- ANTI IDLE MODE -->
+            <div class="setting-item setting-col">
+                <div class="setting-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    Keep-Alive Mechanics
+                </div>
+                <select id="antiIdleMode" class="setting-select">
+                    <option value="balanced">Balanced (Clicks + Scrolls)</option>
+                    <option value="safe">Safe Ghost (Invisible Only)</option>
+                </select>
+                <div class="setting-desc" style="margin-top:-6px;">Safe mode never clicks buttons. Recommended if Colab kicks you for spamming.</div>
+            </div>
+
+        </div>
+
+        <div class="footer" style="margin-top: 14px;">
+            Changes are saved automatically
         </div>
     </div>
     <script src="popup.js"></script>

@@ -180,3 +180,76 @@ function updateUI(active) {
         refreshInterval = setInterval(fetchStats, 1500);
     }
 }
+
+// ===== SETTINGS VIEW LOGIC =====
+const mainView = document.getElementById('mainView');
+const settingsView = document.getElementById('settingsView');
+const openSettingsBtn = document.getElementById('openSettingsBtn');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+
+const themeSelect = document.getElementById('themeSelect');
+const notifToggle = document.getElementById('notifToggle');
+const antiIdleMode = document.getElementById('antiIdleMode');
+
+// View Switching
+openSettingsBtn.addEventListener('click', () => {
+    mainView.style.display = 'none';
+    settingsView.style.display = 'flex';
+});
+
+closeSettingsBtn.addEventListener('click', () => {
+    settingsView.style.display = 'none';
+    mainView.style.display = 'flex';
+});
+
+// Apply Theme Function
+function applyTheme(theme) {
+    if (theme === 'oled') {
+        document.documentElement.setAttribute('data-theme', 'oled');
+    } else if (theme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+    }
+}
+
+// Load Saved Settings on Init
+try {
+    chrome.storage.local.get(['theme', 'notifEnabled', 'antiIdleMode'], (data) => {
+        if (data.theme) {
+            themeSelect.value = data.theme;
+            applyTheme(data.theme);
+        }
+        
+        // Notifications default to true if never set
+        if (data.notifEnabled !== undefined) {
+            notifToggle.checked = data.notifEnabled;
+        } else {
+            notifToggle.checked = true; 
+            chrome.storage.local.set({ notifEnabled: true });
+        }
+        
+        // AntiIdle mode defaults to balanced
+        if (data.antiIdleMode) {
+            antiIdleMode.value = data.antiIdleMode;
+        } else {
+            antiIdleMode.value = 'balanced';
+            chrome.storage.local.set({ antiIdleMode: 'balanced' });
+        }
+    });
+} catch (e) { console.error("Could not load settings:", e); }
+
+// Save & Apply Settings on Change
+themeSelect.addEventListener('change', (e) => {
+    const val = e.target.value;
+    chrome.storage.local.set({ theme: val });
+    applyTheme(val);
+});
+
+notifToggle.addEventListener('change', (e) => {
+    chrome.storage.local.set({ notifEnabled: e.target.checked });
+});
+
+antiIdleMode.addEventListener('change', (e) => {
+    chrome.storage.local.set({ antiIdleMode: e.target.value });
+});
