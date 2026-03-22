@@ -1,11 +1,33 @@
 {
-  "manifest_version": 3,
-  "name": "Colab Ghost Operator",
+  "name": "ColabGO",
   "version": "3.0",
-  "permissions": ["storage", "notifications"],
-  "action": { "default_popup": "popup.html" },
-  "content_scripts": [{
-    "matches": ["https://colab.research.google.com/*"],
-    "js": ["content.js"]
-  }]
+  "manifest_version": 3,
+  "description": "Ghost Operator to keep Google Colab sessions alive.",
+  
+  "icons": {
+    "16": "icons/icons8-infinity-48.png",
+    "48": "icons/icons8-infinity-48.png",
+    "128": "icons/icons8-infinity-48.png"
+  },
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ColabGO",
+    "default_icon": {
+      "16": "icons/icons8-infinity-48.png",
+      "48": "icons/icons8-infinity-48.png",
+      "128": "icons/icons8-infinity-48.png"
+    }
+  },
+
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://colab.research.google.com/*"],
+      "js": ["content.js"]
+    }
+  ]
 }
