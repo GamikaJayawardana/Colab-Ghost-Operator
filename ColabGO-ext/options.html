@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>ColabGO Settings</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #fff;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+        }
+
+        .header img {
+            width: 32px;
+            height: 32px;
+            filter: invert(1);
+        }
+
+        h2 {
+            margin: 0;
+            color: #00e676;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .setting-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        .sub-label {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            background: #141414;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 6px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        select:focus {
+            border-color: #00e676;
+        }
+
+        /* Modern Toggle Switch */
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            background: #141414;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .toggle-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #444;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #00e676;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
+        .footer-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 30px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+
+        button {
+            background: #00e676;
+            color: black;
+            border: none;
+            padding: 12px 24px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            background: #00c853;
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
+        }
+
+        #status {
+            font-size: 13px;
+            font-weight: bold;
+            color: #00e676;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="icons/icons8-infinity-48.png" alt="Logo">
+            <h2>ColabGO Settings</h2>
+        </div>
+
+        <div class="setting-group">
+            <label>Ghost Action Interval</label>
+            <span class="sub-label">How often ColabGO simulates a human interaction.</span>
+            <select id="intervalSelect">
+                <option value="fast">Fast (15s - 30s)</option>
+                <option value="medium">Medium (45s - 90s) [Recommended]</option>
+                <option value="slow">Slow (2m - 5m)</option>
+            </select>
+        </div>
+
+        <div class="setting-group">
+            <label>Notifications</label>
+            <span class="sub-label">Manage desktop alerts triggered by background monitoring.</span>
+
+            <div class="toggle-row">
+                <span class="toggle-text">Warn me if RAM/Disk > 90%</span>
+                <label class="switch">
+                    <input type="checkbox" id="notifyResource"/>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <span class="toggle-text">Notify when Cell finishes</span>
+                <label class="switch">
+                    <input type="checkbox" id="notifyCell"/>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="footer-actions">
+            <span id="status">Settings Saved ✓</span>
+            <button id="saveBtn">Save Changes</button>
+        </div>
+    </div>
+    <script src="options.js"></script>
+</body>
+
+</html>

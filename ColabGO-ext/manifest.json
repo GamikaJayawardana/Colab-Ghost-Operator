@@ -1,8 +1,8 @@
 {
   "name": "ColabGO",
-  "version": "3.0",
+  "version": "4.0",
   "manifest_version": 3,
-  "description": "Ghost Operator to keep Google Colab sessions alive.",
+  "description": "Ghost Operator and Advanced Resource Monitor for Google Colab.",
   
   "icons": {
     "16": "icons/icons8-infinity-48.png",
@@ -13,17 +13,22 @@
   "action": {
     "default_popup": "popup.html",
     "default_title": "ColabGO",
-    "default_icon": {
-      "16": "icons/icons8-infinity-48.png",
-      "48": "icons/icons8-infinity-48.png",
-      "128": "icons/icons8-infinity-48.png"
-    }
+    "default_icon": "icons/icons8-infinity-48.png"
   },
+
+  "options_page": "options.html",
 
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "power",
+    "notifications"
   ],
+  
+  "background": {
+    "service_worker": "background.js"
+  },
+
   "content_scripts": [
     {
       "matches": ["https://colab.research.google.com/*"],
