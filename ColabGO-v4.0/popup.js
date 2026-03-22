@@ -24,6 +24,7 @@ let cachedTotalExec = 0;
 
 // SVG Icons (Lucide)
 const iconCheck = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`;
+const iconError = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
 const iconSpinner = `<svg class="spinning" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>`;
 const iconEmpty = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3; margin-bottom: 2px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
 
@@ -130,17 +131,27 @@ function renderCellTimers() {
 
     reversed.forEach(cell => {
         const isRunning = cell.status === 'running';
-        const icon = isRunning ? iconSpinner : iconCheck;
-        const iconColor = isRunning ? 'var(--text)' : 'var(--green)';
-        const tClass = isRunning ? 'cell-time active' : 'cell-time';
-        const eClass = isRunning ? 'cell-entry running' : 'cell-entry';
+        const isError = cell.status === 'error';
+        
+        let icon = iconCheck;
+        let iconColor = 'var(--green)';
+        if (isRunning) {
+            icon = iconSpinner;
+            iconColor = 'var(--text)';
+        } else if (isError) {
+            icon = iconError;
+            iconColor = 'var(--red)';
+        }
+        
+        const tClass = isRunning ? 'cell-time active' : (isError ? 'cell-time error' : 'cell-time');
+        const eClass = isRunning ? 'cell-entry running' : (isError ? 'cell-entry error' : 'cell-entry');
 
         html += `<div class="${eClass}">
             <div class="cell-left">
                 <div class="cell-icon" style="color: ${iconColor}">${icon}</div>
                 <div class="cell-name">${cell.label}</div>
             </div>
-            <div class="${tClass}">${cell.elapsedFormatted}</div>
+            <div class="${tClass}" style="${isError ? 'color: var(--red);' : ''}">${cell.elapsedFormatted}</div>
         </div>`;
     });
 

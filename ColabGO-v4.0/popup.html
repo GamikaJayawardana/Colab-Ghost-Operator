@@ -309,7 +309,12 @@
             border-color: var(--green-border);
         }
 
-        .cell-entry:not(.running):hover {
+        .cell-entry.error {
+            background: rgba(255, 82, 82, 0.08);
+            border-color: rgba(255, 82, 82, 0.2);
+        }
+
+        .cell-entry:not(.running):not(.error):hover {
             background: rgba(255, 255, 255, 0.03);
         }
 

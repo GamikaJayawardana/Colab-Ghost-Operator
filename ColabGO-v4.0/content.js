@@ -50,23 +50,27 @@ function formatDuration(ms) {
 }
 
 function getExecNumber(cell, fallbackIndex) {
-    const selectors = ['.execution-count', '[class*="execution-count"]', '.inputarea .prompt'];
+    const selectors = ['.execution-count', '[class*="execution-count"]', '.inputarea .prompt', 'colab-run-button', '.cell-execution-container'];
+    let textSrc = '';
+    
     for (const sel of selectors) {
-        const el = cell.querySelector(sel);
+        const el = cell.querySelector(sel) || (cell.shadowRoot && cell.shadowRoot.querySelector(sel));
         if (el) {
-            const match = el.textContent.match(/(\d+)/);
-            if (match) return parseInt(match[1]);
+            textSrc += el.textContent + ' ';
         }
     }
-    if (cell.shadowRoot) {
-        for (const sel of selectors) {
-            const el = cell.shadowRoot.querySelector(sel);
-            if (el) {
-                const match = el.textContent.match(/(\d+)/);
-                if (match) return parseInt(match[1]);
-            }
-        }
+    
+    const runBtn = cell.querySelector('colab-run-button') || (cell.shadowRoot && cell.shadowRoot.querySelector('colab-run-button'));
+    if (runBtn && runBtn.parentElement) {
+        textSrc += runBtn.parentElement.textContent + ' ';
     }
+    
+    const exactMatch = textSrc.match(/\[\s*(\d+)\s*\]/);
+    if (exactMatch) return parseInt(exactMatch[1]);
+    
+    const defaultMatch = textSrc.match(/\b(\d+)\b/);
+    if (defaultMatch) return parseInt(defaultMatch[1]);
+
     return fallbackIndex + 1;
 }
 
@@ -113,6 +117,48 @@ function isCellRunning(cell) {
         }
     }
 
+    return false;
+}
+
+function isCellError(cell) {
+    if (cell.getAttribute('status') === 'error' || cell.classList.contains('error') || cell.classList.contains('failed')) return true;
+    
+    const errSelectors = [
+        '.output-error', 
+        '.output_error', 
+        '.traceback', 
+        '.error-message',
+        '.stream-error',
+        '[data-mime-type*="stderr"]',
+        '.ansi-red-fg',
+        'iron-icon[icon*="error"]',
+        'iron-icon[icon*="close"]'
+    ];
+    
+    const roots = [cell, cell.shadowRoot];
+    const outputs = cell.querySelectorAll('colab-output-view, .output');
+    outputs.forEach(o => { if (o.shadowRoot) roots.push(o.shadowRoot); });
+
+    for (const root of roots) {
+        if (!root) continue;
+        for (const sel of errSelectors) {
+            if (root.querySelector && root.querySelector(sel)) return true;
+        }
+    }
+    
+    const runBtn = cell.querySelector('colab-run-button, [id="run-button"]') || (cell.shadowRoot && cell.shadowRoot.querySelector('colab-run-button, [id="run-button"]'));
+    if (runBtn) {
+        if (runBtn.getAttribute('status') === 'error' || runBtn.classList.contains('error')) return true;
+        if (runBtn.shadowRoot && runBtn.shadowRoot.querySelector('iron-icon[icon*="error"], .error, svg.error')) return true;
+    }
+    
+    if (cell.textContent && (cell.textContent.includes('Traceback (most recent call last)') || 
+                             cell.textContent.includes('NameError:') ||
+                             cell.textContent.includes('FileNotFoundError:') ||
+                             cell.textContent.includes('SyntaxError:'))) {
+        return true;
+    }
+    
     return false;
 }
 
@@ -201,7 +247,10 @@ function scanCells() {
         } else if (!running && activeCells.has(cell)) {
             const data = activeCells.get(cell);
             data.elapsed = Date.now() - data.startTime;
-            data.status = 'done';
+            
+            const hasError = isCellError(cell);
+            data.status = hasError ? 'error' : 'done';
+            
             data.elapsedFormatted = formatDuration(data.elapsed);
             totalExecutionMs += data.elapsed;
 
@@ -210,7 +259,7 @@ function scanCells() {
                 label: data.label,
                 elapsed: data.elapsed,
                 elapsedFormatted: data.elapsedFormatted,
-                status: 'done'
+                status: data.status
             });
 
             if (completedCells.length > 20) {
@@ -220,13 +269,18 @@ function scanCells() {
             activeCells.delete(cell);
             recentlyCompleted.add(cell);
 
-            console.log(`⚡ ColabGO: [CellTimer] DETECTED FINISH -> Cell ${data.index} finished in ${data.elapsedFormatted}.`);
+            console.log(`⚡ ColabGO: [CellTimer] DETECTED FINISH -> Cell ${data.index} finished in ${data.elapsedFormatted}. Error: ${hasError}`);
 
             // Send notification to background script
+            const notifTitle = hasError ? "Google Colab Task Failed" : "Google Colab Task Completed";
+            const notifMessage = hasError 
+                ? `Cell [${data.index}] execution failed after ${data.elapsedFormatted}!`
+                : `Cell [${data.index}] has successfully finished executing in ${data.elapsedFormatted}!`;
+
             chrome.runtime.sendMessage({
                 action: "cellFinished",
-                title: "Google Colab Task Completed",
-                message: `Cell [${data.index}] has successfully finished executing in ${data.elapsedFormatted}!`
+                title: notifTitle,
+                message: notifMessage
             }).then(() => console.log(`⚡ ColabGO: [Notify] Sent notification request for Cell ${data.index}.`))
               .catch(e => console.warn(`⚡ ColabGO: [Notify] Failed to send notification (BG script may be sleeping):`, e));
 
@@ -260,10 +314,11 @@ function scrapeColabDurations() {
         const durationStr = getColabDuration(cell);
         if (durationStr && durationStr.length > 0 && durationStr !== '0s') {
             const cellNum = getExecNumber(cell, i);
+            const hasError = isCellError(cell);
             result.push({
                 index: cellNum,
                 label: `Cell [${cellNum}]`,
-                status: 'done',
+                status: hasError ? 'error' : 'done',
                 elapsed: 0,
                 elapsedFormatted: durationStr
             });
