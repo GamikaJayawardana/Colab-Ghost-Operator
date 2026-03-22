@@ -4,11 +4,25 @@ let scanTimeoutId = null;
 
 let isExtensionActive = false;
 let antiIdleMode = 'balanced';
+let sessionStartTime = null;
 
 // Initialize active state and preferences
-chrome.storage.local.get(['isActive', 'antiIdleMode'], (data) => {
+chrome.storage.local.get(['isActive', 'antiIdleMode', 'sessionStartTime'], (data) => {
     isExtensionActive = !!data.isActive;
     if (data.antiIdleMode) antiIdleMode = data.antiIdleMode;
+    
+    // Safely restore or instantiate the session start time
+    if (isExtensionActive) {
+        if (data.sessionStartTime) {
+            sessionStartTime = data.sessionStartTime;
+            console.log("⚡ ColabGO: Restored session uptime timer.");
+        } else {
+            sessionStartTime = Date.now();
+            chrome.storage.local.set({ sessionStartTime: sessionStartTime });
+            console.log("⚡ ColabGO: Initialized new session uptime timer.");
+        }
+        ghostAction(); // Start background routines since active
+    }
 });
 
 // Update preferences dynamically when Settings UI changes
@@ -22,7 +36,6 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 // ===== CELL EXECUTION TIME TRACKING =====
 const activeCells = new Map(); // cell element -> { index, startTime, elapsed, label }
 let completedCells = []; // array of finished cell records
-let sessionStartTime = null;
 let totalExecutionMs = 0;
 let recentlyCompleted = new WeakSet();
 
@@ -428,6 +441,3 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 console.log("⚡ ColabGO: Content script injected and completely randomized operators initialized.");
-if (isExtensionActive) {
-    ghostAction();
-}
