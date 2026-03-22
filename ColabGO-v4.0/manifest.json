@@ -10,7 +10,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "ColabGO\nKeep your computer awake and leave the Google Colab tab open in the background. ColabGO will handle the rest!",
+    "default_title": "ColabGO\nKeep your computer awake and leave the \nGoogle Colab tab open in the background.\nColabGO will handle the rest!",
     "default_icon": {
       "16": "icons/icons8-infinity-48.png",
       "48": "icons/icons8-infinity-48.png",
