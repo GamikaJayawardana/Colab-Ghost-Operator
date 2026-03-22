@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0d10;
+            --card: #131620;
+            --card-border: rgba(0, 230, 118, 0.12);
+            --card-glow: rgba(0, 230, 118, 0.05);
+            --surface: #171b26;
+            --surface-2: #1c2030;
+            --surface-3: #212536;
+            --text: #e8eaf0;
+            --text-muted: #8890a4;
+            --text-dim: #555d74;
+            --green: #00e676;
+            --green-glow: rgba(0, 230, 118, 0.3);
+            --green-soft: rgba(0, 230, 118, 0.08);
+            --green-border: rgba(0, 230, 118, 0.2);
+            --red: #ff5252;
+            --amber: #ffab40;
+            --radius-md: 14px;
+            --radius-sm: 10px;
+            --radius-xs: 7px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 330px;
+            height: auto;
+            /* Let browser compute natural height */
+            margin: 0;
+            padding: 12px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+            /* Do not permit outer scrolling */
+        }
+
+        /* SVG util */
+        svg {
+            display: block;
+            flex-shrink: 0;
+        }
+
+        .container {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: 18px 16px 16px;
+            box-shadow: 0 0 30px var(--card-glow), 0 8px 32px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 2px;
+            padding: 2px 0;
+            border-radius: var(--radius-sm);
+        }
+
+        .header img {
+            width: 20px;
+            height: 20px;
+            /* Flat modern yellow/gold */
+            filter: brightness(0) saturate(100%) invert(80%) sepia(35%) saturate(1200%) hue-rotate(355deg) brightness(105%) contrast(100%);
+        }
+
+        h2 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--text);
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 8px;
+            color: var(--text-dim);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        /* INFO BOX */
+        .info-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 10.5px;
+            color: var(--text-muted);
+            background: var(--surface);
+            border: 1px solid var(--card-border);
+            border-left: 3px solid var(--green);
+            border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+            padding: 12px;
+            line-height: 1.5;
+        }
+
+        .info-box-icon {
+            color: var(--green);
+            margin-top: 1px;
+        }
+
+        .info-box b {
+            color: var(--text);
+        }
+
+        /* SECTION LABEL */
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .section-icon {
+            color: var(--text-muted);
+        }
+
+        /* RESOURCES */
+        .resource-section {
+            margin-bottom: 2px;
+        }
+
+        .resource-box {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .res-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .res-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .res-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .res-percent {
+            font-size: 11px;
+            color: var(--green);
+            font-weight: 700;
+            font-family: 'Inter', monospace;
+        }
+
+        .res-bar-track {
+            width: 100%;
+            height: 4px;
+            background: var(--surface-3);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .res-bar-fill {
+            height: 100%;
+            background: var(--green);
+            width: 0%;
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+
+        .res-bar-fill.warn {
+            background: var(--amber);
+        }
+
+        .res-bar-fill.danger {
+            background: var(--red);
+        }
+
+        /* CELL TIMER */
+        .timer-box {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .timer-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+
+        .timer-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timer-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-dim);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .timer-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            font-family: 'Inter', monospace;
+        }
+
+        /* CELL LIST - Show exactly ~3 cells (114px) and scroll the rest natively */
+        .cell-list {
+            max-height: 114px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-right: 6px;
+            /* space for scrollbar */
+        }
+
+        .cell-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .cell-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+        }
+
+        .cell-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+
+        .cell-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .cell-entry {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            border-radius: var(--radius-xs);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .cell-entry.running {
+            background: var(--green-soft);
+            border-color: var(--green-border);
+        }
+
+        .cell-entry:not(.running):hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .cell-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cell-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+        }
+
+        .cell-name {
+            font-size: 11.5px;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .cell-time {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            font-family: 'Inter', monospace;
+            font-weight: 600;
+        }
+
+        .cell-time.active {
+            color: var(--green);
+        }
+
+        .cell-empty {
+            text-align: center;
+            padding: 16px 8px 12px;
+            color: var(--text-dim);
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinning {
+            animation: spin 1.5s linear infinite;
+        }
+
+        /* TOGGLE BUTTON */
+        .toggle-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 13px;
+            font-weight: 700;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        @keyframes btnPulse {
+            0% {
+                box-shadow: 0 0 10px var(--green-glow);
+            }
+
+            50% {
+                box-shadow: 0 0 22px var(--green-glow), 0 0 40px rgba(0, 230, 118, 0.1);
+            }
+
+            100% {
+                box-shadow: 0 0 10px var(--green-glow);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .toggle-btn.on {
+            background: linear-gradient(135deg, #00c853, #00e676, #69f0ae);
+            color: #0b0d10;
+            animation: btnPulse 2.5s infinite;
+        }
+
+        .toggle-btn.on::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        .toggle-btn.off {
+            background: var(--surface-2);
+            color: var(--red);
+            border: 1px solid rgba(255, 82, 82, 0.25);
+        }
+
+        .toggle-btn.off:hover {
+            background: rgba(255, 82, 82, 0.06);
+            border-color: var(--red);
+            box-shadow: 0 0 16px rgba(255, 82, 82, 0.15);
+        }
+
+        /* STATUS BAR */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: -2px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .status-dot.active {
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green-glow);
+            animation: dotPulse 2s infinite;
+        }
+
+        .status-dot.inactive {
+            background: var(--text-dim);
+        }
+
+        @keyframes dotPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.35;
+            }
+        }
+
+        .status-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'Inter', monospace;
+            font-weight: 500;
+        }
+
+        /* FOOTER */
+        .footer {
+            font-size: 9px;
+            color: var(--text-dim);
+            letter-spacing: 0.3px;
+            margin-top: -6px;
+            margin-bottom: 2px;
+            text-align: center;
+        }
+
+        .footer span {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div>
+            <div class="header">
+                <img src="icons/icons8-infinity-48.png" alt="ColabGO" id="logoIcon">
+                <h2>ColabGO</h2>
+            </div>
+            <div class="subtitle">Ghost Operator</div>
+        </div>
+
+
+
+        <!-- RESOURCES -->
+        <div class="resource-section">
+            <div class="section-label">
+                <div class="section-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 20V10"></path>
+                        <path d="M12 20V4"></path>
+                        <path d="M6 20v-4"></path>
+                    </svg>
+                </div>
+                Resources
+            </div>
+            <div class="resource-box">
+                <div class="res-row">
+                    <div class="res-info">
+                        <span class="res-label">System RAM: <span id="ramText">Connecting...</span></span>
+                        <span class="res-percent" id="ramPercent">--%</span>
+                    </div>
+                    <div class="res-bar-track">
+                        <div class="res-bar-fill" id="ramBar"></div>
+                    </div>
+                </div>
+                <div class="res-row">
+                    <div class="res-info">
+                        <span class="res-label">Disk: <span id="diskText">Connecting...</span></span>
+                        <span class="res-percent" id="diskPercent">--%</span>
+                    </div>
+                    <div class="res-bar-track">
+                        <div class="res-bar-fill" id="diskBar"></div>
+                    </div>
+                </div>
+                <div class="res-row" id="gpuContainer" style="display: none;">
+                    <div class="res-info">
+                        <span class="res-label">GPU RAM: <span id="gpuText">Connecting...</span></span>
+                        <span class="res-percent" id="gpuPercent">--%</span>
+                    </div>
+                    <div class="res-bar-track">
+                        <div class="res-bar-fill" id="gpuBar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CELL TIMER -->
+        <div class="timer-section">
+            <div class="section-label">
+                <div class="section-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+                Cell Timer
+            </div>
+            <div class="timer-box">
+                <div class="timer-stats">
+                    <div class="timer-stat">
+                        <div class="timer-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            Session Uptime
+                        </div>
+                        <div class="timer-value" id="sessionUptime">00:00:00</div>
+                    </div>
+                    <div class="timer-stat">
+                        <div class="timer-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                            Execution Time
+                        </div>
+                        <div class="timer-value" id="totalExecTime">00:00:00</div>
+                    </div>
+                </div>
+
+                <!-- ONLY SCROLL THIS PART IF MORE THAN 3 CELLS -->
+                <div class="cell-list" id="cellList">
+                    <div class="cell-empty">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3;">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        No cells executed yet
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="toggle-btn off" id="mainToggle">INACTIVE</button>
+
+        <div class="status-bar">
+            <div class="status-dot inactive" id="statusDot"></div>
+            <span class="status-text" id="logText">System paused.</span>
+        </div>
+
+        <div class="footer">
+            Developed by <span>GamikaKJ</span> · v4.0
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

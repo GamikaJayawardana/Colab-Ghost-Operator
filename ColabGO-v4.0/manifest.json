@@ -1,0 +1,41 @@
+{
+  "name": "ColabGO",
+  "version": "4.1",
+  "manifest_version": 3,
+  "description": "Ghost Operator to keep Google Colab sessions alive.",
+  "icons": {
+    "16": "icons/icons8-infinity-48.png",
+    "48": "icons/icons8-infinity-48.png",
+    "128": "icons/icons8-infinity-48.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ColabGO\nKeep your computer awake and leave the Google Colab tab open in the background. ColabGO will handle the rest!",
+    "default_icon": {
+      "16": "icons/icons8-infinity-48.png",
+      "48": "icons/icons8-infinity-48.png",
+      "128": "icons/icons8-infinity-48.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "notifications",
+    "activeTab",
+    "scripting",
+    "power"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://colab.research.google.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ]
+}
