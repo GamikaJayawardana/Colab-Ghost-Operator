@@ -1,5 +1,13 @@
 # ⚡ ColabGO: Ghost Operator (v4.1)
+<p align="center">
+  <img src="Screenshots/PopupDark.png" width="350" alt="ColabGO Popup Dark">
+  <img src="Screenshots/PopupLight.png" width="350" alt="ColabGO Popup Light">
+</p>
 
+<p align="center">
+  <img src="Screenshots/SettingPageDark.png" width="350" alt="Settings Page Dark">
+  <img src="Screenshots/SettingPageLight.png" width="350" alt="Settings Page Light">
+</p>
 ColabGO is a lightweight Chrome Extension designed to keep your Google Colab sessions alive and provide deep insights into your workflow. It prevents idle timeouts by using randomized, human-like interactions and provides a real-time resource dashboard.
 
 ## 🚀 What's New in v4.0 & v4.1
