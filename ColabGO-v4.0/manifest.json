@@ -1,6 +1,6 @@
 {
   "name": "ColabGO",
-  "version": "4.1",
+  "version": "4.4",
   "manifest_version": 3,
   "description": "Ghost Operator to keep Google Colab sessions alive.",
   "icons": {
@@ -23,7 +23,8 @@
     "notifications",
     "activeTab",
     "scripting",
-    "power"
+    "power",
+    "alarms"
   ],
   "background": {
     "service_worker": "background.js"

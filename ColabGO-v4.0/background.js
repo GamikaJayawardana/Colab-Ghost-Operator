@@ -41,3 +41,26 @@ chrome.storage.local.get(['isActive'], (data) => {
         chrome.power.requestKeepAwake("system");
     }
 });
+
+// Periodic background alarm to ping tabs and prevent sleeping
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.alarms.create("keepAliveAlarm", { periodInMinutes: 1 });
+});
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === "keepAliveAlarm") {
+        console.log("ColabGO BG: keepAliveAlarm triggered");
+        chrome.storage.local.get(['isActive'], (data) => {
+            if (data.isActive) {
+                chrome.tabs.query({ url: "https://colab.research.google.com/*" }, (tabs) => {
+                    tabs.forEach(tab => {
+                        // Prevent Chrome from discarding tab to save memory
+                        chrome.tabs.update(tab.id, { autoDiscardable: false });
+                        // Ping content script to execute ghostAction reliably
+                        chrome.tabs.sendMessage(tab.id, { action: "pingGhostAction" }).catch(() => {});
+                    });
+                });
+            }
+        });
+    }
+});

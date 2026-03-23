@@ -11,16 +11,17 @@ chrome.storage.local.get(['isActive', 'antiIdleMode', 'sessionStartTime'], (data
     isExtensionActive = !!data.isActive;
     if (data.antiIdleMode) antiIdleMode = data.antiIdleMode;
     
-    // Safely restore or instantiate the session start time
+    // Always track session uptime for the timer section regardless of active state
+    if (data.sessionStartTime) {
+        sessionStartTime = data.sessionStartTime;
+        console.log("⚡ ColabGO: Restored session uptime timer.");
+    } else {
+        sessionStartTime = Date.now();
+        chrome.storage.local.set({ sessionStartTime: sessionStartTime });
+        console.log("⚡ ColabGO: Initialized new session uptime timer.");
+    }
+
     if (isExtensionActive) {
-        if (data.sessionStartTime) {
-            sessionStartTime = data.sessionStartTime;
-            console.log("⚡ ColabGO: Restored session uptime timer.");
-        } else {
-            sessionStartTime = Date.now();
-            chrome.storage.local.set({ sessionStartTime: sessionStartTime });
-            console.log("⚡ ColabGO: Initialized new session uptime timer.");
-        }
         ghostAction(); // Start background routines since active
     }
 });
@@ -177,7 +178,7 @@ function getColabDuration(cell) {
 
 // Subtle anti-idle function that runs when cells are computing
 function activeAntiIdlePing() {
-    console.log("⚡ ColabGO: [Active-Anti-Idle] Cells are computing. Dispatching invisible UI events to prevent sleep.");
+    console.log("⚡ ColabGO: [Active-Anti-Idle] Cells are computing. Dispatching invisible UI events (pointer & key) to prevent sleep.");
     try {
         // Dispatch pointer moves to convince Colab the user is active
         const pointerEvent = new PointerEvent('pointermove', {
@@ -186,6 +187,17 @@ function activeAntiIdlePing() {
             clientY: Math.random() * window.innerHeight
         });
         document.dispatchEvent(pointerEvent);
+
+        // Dispatch a benign keypress (Shift) to definitively reset Colab's idle tracker
+        const keyEvent = new KeyboardEvent('keydown', {
+            key: 'Shift', code: 'ShiftLeft', keyCode: 16,
+            bubbles: true, cancelable: true
+        });
+        document.dispatchEvent(keyEvent);
+        document.dispatchEvent(new KeyboardEvent('keyup', {
+            key: 'Shift', code: 'ShiftLeft', keyCode: 16,
+            bubbles: true, cancelable: true
+        }));
 
         // Very occasionally simulate a tiny scroll just in case
         if (Math.random() < 0.2) {
@@ -332,6 +344,7 @@ setTimeout(loopScanCells, 2000);
 
 // ===== GHOST ACTION (Routine Background Check) =====
 async function ghostAction() {
+    if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
     console.log("⚡ ColabGO: [ghostAction] Running standard background check...");
     try {
         if (!isExtensionActive) {
@@ -362,15 +375,8 @@ async function ghostAction() {
             window.scrollBy(0, 10);
             setTimeout(() => window.scrollBy(0, -10), 500);
         } else {
-            // Keep-Alive Mode: Balanced (clicks, scrolls, focuses)
-            if (roll < 0.2) {
-                // Unlikely: Tap connect button
-                const connectBtn = document.querySelector("colab-connect-button")?.shadowRoot?.querySelector("#connect");
-                if (connectBtn) {
-                    console.log("⚡ ColabGO: [ghostAction] Random standard interaction -> Tapping Connect button.");
-                    connectBtn.click();
-                }
-            } else if (roll < 0.7) {
+            // Keep-Alive Mode: Balanced (scrolls, focuses)
+            if (roll < 0.6) {
                 // Most likely: Subtle scroll
                 console.log("⚡ ColabGO: [ghostAction] Random standard interaction -> Scrolling page slightly.");
                 window.scrollBy(0, 10);
@@ -448,12 +454,13 @@ function scrapeResources() {
 
     const runningList = [];
     activeCells.forEach((data) => {
+        const currentElapsed = Date.now() - data.startTime;
         runningList.push({
             index: data.index,
             label: data.label,
             status: 'running',
-            elapsed: data.elapsed,
-            elapsedFormatted: formatDuration(data.elapsed)
+            elapsed: currentElapsed,
+            elapsedFormatted: formatDuration(currentElapsed)
         });
     });
 
@@ -463,7 +470,8 @@ function scrapeResources() {
     stats.totalExecTime = totalExecutionMs;
 
     activeCells.forEach((data) => {
-        stats.totalExecTime += data.elapsed;
+        const currentElapsed = Date.now() - data.startTime;
+        stats.totalExecTime += currentElapsed;
     });
 
     return stats;
@@ -477,12 +485,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
         
         if (isExtensionActive) {
-            sessionStartTime = Date.now();
-            chrome.storage.local.set({ sessionStartTime: sessionStartTime });
+            if (!sessionStartTime) {
+                sessionStartTime = Date.now();
+                chrome.storage.local.set({ sessionStartTime: sessionStartTime });
+            }
             ghostAction(); // manually trigger an immediate check since active
         } else {
-            sessionStartTime = null;
-            chrome.storage.local.remove('sessionStartTime');
+            // Extension is inactive: disable awakening strategies but leave timers alone
             if (keepAliveTimeoutId) { clearTimeout(keepAliveTimeoutId); keepAliveTimeoutId = null; }
         }
         sendResponse({ status: "ok" });
@@ -490,6 +499,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     if (request.action === "getStats") {
         sendResponse(scrapeResources());
+    }
+
+    if (request.action === "pingGhostAction") {
+        if (isExtensionActive) {
+            console.log("⚡ ColabGO: Received background keep-alive ping. Executing Ghost Action.");
+            ghostAction();
+        } else {
+            // When inactive, we disable ghost operations but still force a quick scan
+            // to ensure accurate cell timers and resources in the background.
+            console.log("⚡ ColabGO: Received background keep-alive ping. Monitoring only (Inactive).");
+            scanCells(); 
+        }
+        sendResponse({ status: "ok" });
     }
 
     return true;
