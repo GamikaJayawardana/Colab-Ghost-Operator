@@ -7,19 +7,13 @@ let antiIdleMode = 'balanced';
 let sessionStartTime = null;
 
 // Initialize active state and preferences
-chrome.storage.local.get(['isActive', 'antiIdleMode', 'sessionStartTime'], (data) => {
+chrome.storage.local.get(['isActive', 'antiIdleMode'], (data) => {
     isExtensionActive = !!data.isActive;
     if (data.antiIdleMode) antiIdleMode = data.antiIdleMode;
     
-    // Always track session uptime for the timer section regardless of active state
-    if (data.sessionStartTime) {
-        sessionStartTime = data.sessionStartTime;
-        console.log("⚡ ColabGO: Restored session uptime timer.");
-    } else {
-        sessionStartTime = Date.now();
-        chrome.storage.local.set({ sessionStartTime: sessionStartTime });
-        console.log("⚡ ColabGO: Initialized new session uptime timer.");
-    }
+    // Track session uptime in-memory only (resets on page load)
+    sessionStartTime = Date.now();
+    console.log("⚡ ColabGO: Initialized new session uptime timer for current page load.");
 
     if (isExtensionActive) {
         ghostAction(); // Start background routines since active
@@ -38,7 +32,6 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 const activeCells = new Map(); // cell element -> { index, startTime, elapsed, label }
 let completedCells = []; // array of finished cell records
 let totalExecutionMs = 0;
-let recentlyCompleted = new WeakSet();
 
 function formatDuration(ms) {
     const totalSeconds = Math.floor(ms / 1000);
@@ -178,6 +171,9 @@ function getColabDuration(cell) {
 
 // Subtle anti-idle function that runs when cells are computing
 function activeAntiIdlePing() {
+    if (antiIdleMode === 'safe') {
+        return; // Obey safe mode
+    }
     console.log("⚡ ColabGO: [Active-Anti-Idle] Cells are computing. Dispatching invisible UI events (pointer & key) to prevent sleep.");
     try {
         // Dispatch pointer moves to convince Colab the user is active
@@ -231,13 +227,14 @@ function loopScanCells() {
 }
 
 function scanCells() {
-    let cells = document.querySelectorAll('colab-cell');
-    if (cells.length === 0) cells = document.querySelectorAll('.cell.code');
-    if (cells.length === 0) cells = document.querySelectorAll('.cell');
+    try {
+        let cells = document.querySelectorAll('colab-cell');
+        if (cells.length === 0) cells = document.querySelectorAll('.cell.code');
+        if (cells.length === 0) cells = document.querySelectorAll('.cell');
 
-    let currentlyRunningAny = false;
+        let currentlyRunningAny = false;
 
-    cells.forEach((cell, i) => {
+        cells.forEach((cell, i) => {
         const running = isCellRunning(cell);
 
         if (running) {
@@ -279,7 +276,6 @@ function scanCells() {
             }
 
             activeCells.delete(cell);
-            recentlyCompleted.add(cell);
 
             console.log(`⚡ ColabGO: [CellTimer] DETECTED FINISH -> Cell ${data.index} finished in ${data.elapsedFormatted}. Error: ${hasError}`);
 
@@ -312,6 +308,15 @@ function scanCells() {
             console.log("⚡ ColabGO: [Status] All computation finished or extension paused. Stopping randomized ghost system.");
             clearTimeout(keepAliveTimeoutId);
             keepAliveTimeoutId = null;
+        }
+    }
+    } catch (error) {
+        if (error.message && error.message.includes("Extension context invalidated")) {
+            console.warn("⚡ ColabGO: [scanCells] Extension updated. Stopping orphaned interval.");
+            if (scanTimeoutId) { clearTimeout(scanTimeoutId); scanTimeoutId = null; }
+            if (keepAliveTimeoutId) { clearTimeout(keepAliveTimeoutId); keepAliveTimeoutId = null; }
+        } else {
+            console.error("⚡ ColabGO ERROR: [scanCells]", error);
         }
     }
 }
@@ -354,7 +359,6 @@ async function ghostAction() {
 
         if (!sessionStartTime) {
             sessionStartTime = Date.now();
-            chrome.storage.local.set({ sessionStartTime: sessionStartTime });
             console.log("⚡ ColabGO: [ghostAction] Session start time registered.");
         }
 
@@ -383,10 +387,12 @@ async function ghostAction() {
                 setTimeout(() => window.scrollBy(0, -10), 500);
             } else {
                 // Somewhat likely: Focus a code cell
-                const codeCell = document.querySelector("colab-cell") || document.querySelector(".cell");
-                if (codeCell) {
-                    console.log("⚡ ColabGO: [ghostAction] Random standard interaction -> Focusing code cell.");
-                    codeCell.focus();
+                const codeCells = document.querySelectorAll("colab-cell");
+                const fallbackCells = codeCells.length > 0 ? codeCells : document.querySelectorAll(".cell");
+                if (fallbackCells.length > 0) {
+                    console.log("⚡ ColabGO: [ghostAction] Random standard interaction -> Focusing random code cell.");
+                    const randomCell = fallbackCells[Math.floor(Math.random() * fallbackCells.length)];
+                    randomCell.focus({ preventScroll: true });
                 }
             }
         }
@@ -487,7 +493,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (isExtensionActive) {
             if (!sessionStartTime) {
                 sessionStartTime = Date.now();
-                chrome.storage.local.set({ sessionStartTime: sessionStartTime });
             }
             ghostAction(); // manually trigger an immediate check since active
         } else {
@@ -503,8 +508,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     if (request.action === "pingGhostAction") {
         if (isExtensionActive) {
-            console.log("⚡ ColabGO: Received background keep-alive ping. Executing Ghost Action.");
-            ghostAction();
+            console.log("⚡ ColabGO: Received background keep-alive ping.");
+            if (!timeoutId) {
+                console.log("⚡ ColabGO: Executing Ghost Action from ping.");
+                ghostAction();
+            }
         } else {
             // When inactive, we disable ghost operations but still force a quick scan
             // to ensure accurate cell timers and resources in the background.
